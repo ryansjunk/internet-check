@@ -4,14 +4,35 @@
   <meta charset="UTF-8">
   <title>Internet Checker</title>
   <style>
-    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-    .status { font-size: 2em; margin-top: 20px; }
-    .timer { font-size: 1em; margin-top: 10px; color: #555; }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: black url("https://picsum.photos/800/1600") no-repeat center center;
+      background-size: cover;
+      transition: background-color 0.5s;
+    }
+    .status {
+      font-size: 4em;
+      font-weight: bold;
+      color: white;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+      margin-bottom: 20px;
+    }
+    .timer {
+      font-size: 1.5em;
+      color: white;
+      text-shadow: 1px 1px 5px rgba(0,0,0,0.7);
+    }
   </style>
 </head>
 <body>
 
-<h1>Internet Connection Status</h1>
 <div class="status" id="status">Checking...</div>
 <div class="timer" id="timer">Next check in 10s</div>
 
@@ -30,30 +51,30 @@
       clearTimeout(timeout);
 
       if (response.ok) {
-        statusEl.textContent = "✅ Online";
-        statusEl.style.color = "green";
+        document.body.style.backgroundColor = "rgba(0,200,0,0.6)";
+        statusEl.textContent = "✅ ONLINE";
       } else {
-        statusEl.textContent = "⚠️ Offline (response error)";
-        statusEl.style.color = "orange";
+        document.body.style.backgroundColor = "rgba(255,165,0,0.6)";
+        statusEl.textContent = "⚠️ RESPONSE ERROR";
       }
     } catch {
-      statusEl.textContent = "❌ Offline";
-      statusEl.style.color = "red";
+      document.body.style.backgroundColor = "rgba(200,0,0,0.6)";
+      statusEl.textContent = "❌ OFFLINE";
     }
-    countdown = checkInterval / 1000; // reset countdown after check
+    countdown = checkInterval / 1000; // reset countdown
   }
 
-  // Start with an immediate check
+  // Initial check
   checkInternet();
 
-  // Countdown timer every second
+  // Countdown every second
   setInterval(() => {
     countdown--;
     if (countdown < 0) countdown = 0;
     timerEl.textContent = `Next check in ${countdown}s`;
   }, 1000);
 
-  // Auto-check every 10 seconds
+  // Auto-check every 10s
   setInterval(checkInternet, checkInterval);
 </script>
 
