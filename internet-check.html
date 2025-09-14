@@ -49,7 +49,80 @@
   canvas.height = window.innerHeight;
   canvas.width = window.innerWidth;
 
-  const letters = "アァイィウヴエェオカガキギクグケゲコゴサザシジスズセ
+  const letters = "アァイィウヴエェオカガキギクグケゲコゴサザシジスズセゼソゾタダチヂッツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモヤユヨラリルレロワヲンABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const fontSize = 14;
+  const columns = Math.floor(canvas.width / fontSize);
+  const drops = Array(columns).fill(1);
 
+  function drawMatrix() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#0F0";
+    ctx.font = fontSize + "px monospace";
+    for (let i = 0; i < drops.length; i++) {
+      const text = letters.charAt(Math.floor(Math.random() * letters.length));
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i]++;
+    }
+  }
+  setInterval(drawMatrix, 50);
+
+  // --- INTERNET CHECKER ---
+  const urlToCheck = "https://api.github.com"; // CORS-friendly site
+  const checkInterval = 10000; // 10s
+  let countdown = checkInterval / 1000;
+  const statusEl = document.getElementById('status');
+  const timerEl = document.getElementById('timer');
+
+  async function checkInternet() {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      const response = await fetch(urlToCheck, { signal: controller.signal, cache: "no-store" });
+      clearTimeout(timeout);
+
+      if (response.ok) {
+        statusEl.textContent = "✅ ONLINE";
+        statusEl.style.color = "lime";
+      } else {
+        statusEl.textContent = "⚠️ RESPONSE ERROR";
+        statusEl.style.color = "orange";
+      }
+    } catch (err) {
+      statusEl.textContent = "❌ OFFLINE";
+      statusEl.style.color = "red";
+    }
+    countdown = checkInterval / 1000; // reset countdown
+  }
+
+  // First check
+  checkInternet();
+
+  // Countdown updater
+  setInterval(() => {
+    countdown--;
+    if (countdown <= 0) countdown = 0;
+    timerEl.textContent = `Next check in ${countdown}s`;
+  }, 1000);
+
+  // Auto re-check
+  setInterval(checkInternet, checkInterval);
+
+  // Tap to force re-check
+  document.body.addEventListener("click", () => {
+    statusEl.textContent = "🔄 Checking...";
+    checkInternet();
+  });
+
+  // Handle resize
+  window.addEventListener("resize", () => {
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+  });
+</script>
+
+</body>
 </html>
-
