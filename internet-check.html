@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Internet Checker</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    .status { font-size: 2em; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<h1>Internet Connection Status</h1>
+<div class="status" id="status">Checking...</div>
+
+<script>
+  const urlToCheck = "https://www.google.com"; // change to any URL you like
+  const checkInterval = 10000; // 10 sec
+  const statusEl = document.getElementById('status');
+
+  async function checkInternet() {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      const response = await fetch(urlToCheck, { signal: controller.signal });
+      clearTimeout(timeout);
+
+      if (response.ok) {
+        statusEl.textContent = "✅ Online";
+        statusEl.style.color = "green";
+      } else {
+        statusEl.textContent = "⚠️ Offline (response error)";
+        statusEl.style.color = "orange";
+      }
+    } catch {
+      statusEl.textContent = "❌ Offline";
+      statusEl.style.color = "red";
+    }
+  }
+
+  checkInternet();
+  setInterval(checkInternet, checkInterval);
+</script>
+
+</body>
+</html>
