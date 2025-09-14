@@ -6,17 +6,21 @@
   <style>
     body { font-family: sans-serif; text-align: center; margin-top: 50px; }
     .status { font-size: 2em; margin-top: 20px; }
+    .timer { font-size: 1em; margin-top: 10px; color: #555; }
   </style>
 </head>
 <body>
 
 <h1>Internet Connection Status</h1>
 <div class="status" id="status">Checking...</div>
+<div class="timer" id="timer">Next check in 10s</div>
 
 <script>
-  const urlToCheck = "https://api.github.com"; // change if you want
-  const checkInterval = 10000; // 10 sec
+  const urlToCheck = "https://api.github.com"; // CORS-friendly site
+  const checkInterval = 10000; // 10 seconds
+  let countdown = checkInterval / 1000;
   const statusEl = document.getElementById('status');
+  const timerEl = document.getElementById('timer');
 
   async function checkInternet() {
     try {
@@ -36,12 +40,22 @@
       statusEl.textContent = "❌ Offline";
       statusEl.style.color = "red";
     }
+    countdown = checkInterval / 1000; // reset countdown after check
   }
 
+  // Start with an immediate check
   checkInternet();
+
+  // Countdown timer every second
+  setInterval(() => {
+    countdown--;
+    if (countdown < 0) countdown = 0;
+    timerEl.textContent = `Next check in ${countdown}s`;
+  }, 1000);
+
+  // Auto-check every 10 seconds
   setInterval(checkInternet, checkInterval);
 </script>
 
 </body>
 </html>
-
