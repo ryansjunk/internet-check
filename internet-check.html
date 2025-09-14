@@ -77,4 +77,51 @@
   setInterval(drawMatrix, 33);
 
   // INTERNET CHECKER
-  const statusEl
+  const statusEl = document.getElementById("status");
+  const countdownEl = document.getElementById("countdown");
+  const url = "https://www.gstatic.com/generate_204";
+  const intervalSeconds = 10;
+  let countdown = intervalSeconds;
+
+  function updateStatus(online) {
+    statusEl.textContent = online ? "ONLINE ✅" : "OFFLINE ❌";
+    statusEl.style.color = online ? "#00ff00" : "#ff4444";
+  }
+
+  async function checkInternet() {
+    try {
+      // Fetch to Google’s generate_204; success = online
+      fetch(url, { mode: "no-cors", cache: "no-store" })
+        .then(() => updateStatus(true))
+        .catch(() => updateStatus(false));
+    } catch {
+      updateStatus(false);
+    }
+  }
+
+  // COUNTDOWN (runs independently)
+  setInterval(() => {
+    countdown--;
+    if (countdown <= 0) {
+      countdown = intervalSeconds;
+      checkInternet(); // async; does not block countdown
+    }
+    countdownEl.textContent = `Next check in: ${countdown}s`;
+  }, 1000);
+
+  // Initial check
+  checkInternet();
+
+  // Optional: tap anywhere to force check
+  document.body.addEventListener("click", checkInternet);
+
+  // Resize canvas on window change
+  window.addEventListener("resize", () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+</script>
+</body>
+</html>
+
+
