@@ -53,8 +53,7 @@
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
 
-    const letters = "アァカサタナハマヤャラワ0123456789".split("");
-
+    const letters = "アァカサタナハマヤラ0123456789".split("");
     const fontSize = 14;
     const columns = canvas.width / fontSize;
 
@@ -85,7 +84,7 @@
     const statusEl = document.getElementById("status");
     const countdownEl = document.getElementById("countdown");
 
-    const url = "https://www.gstatic.com/generate_204"; // lightweight "no content" page
+    const url = "https://www.gstatic.com/generate_204"; 
     let countdown = 10;
 
     function updateStatus(online) {
@@ -100,8 +99,18 @@
 
     async function checkInternet() {
       try {
+        // This will succeed if there's *any* connection
         await fetch(url, { mode: "no-cors", cache: "no-store" });
-        updateStatus(true); // If fetch didn't throw, assume online
-      } catch (
+        updateStatus(true);
+      } catch (e) {
+        updateStatus(false);
+      }
+    }
 
+    function startCountdown() {
+      let countdown = 10;
+      countdownEl.textContent = `Next check in: ${countdown}s`;
 
+      const interval = setInterval(() => {
+        countdown--;
+        countdownEl.textContent = `Next check in:
