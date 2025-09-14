@@ -53,7 +53,7 @@
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
 
-    const letters = "アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウヴクスツヌフムユュルグズヅブプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポ0123456789".split("");
+    const letters = "アァカサタナハマヤャラワ0123456789".split("");
 
     const fontSize = 14;
     const columns = canvas.width / fontSize;
@@ -85,7 +85,7 @@
     const statusEl = document.getElementById("status");
     const countdownEl = document.getElementById("countdown");
 
-    const url = "https://httpstat.us/200"; // rock-solid site
+    const url = "https://www.gstatic.com/generate_204"; // lightweight "no content" page
     let countdown = 10;
 
     function updateStatus(online) {
@@ -100,34 +100,8 @@
 
     async function checkInternet() {
       try {
-        const response = await fetch(url, { cache: "no-store" });
-        if (response.ok) {
-          updateStatus(true);
-        } else {
-          updateStatus(false);
-        }
-      } catch (e) {
-        updateStatus(false);
-      }
-    }
+        await fetch(url, { mode: "no-cors", cache: "no-store" });
+        updateStatus(true); // If fetch didn't throw, assume online
+      } catch (
 
-    function startCountdown() {
-      countdown = 10;
-      countdownEl.textContent = `Next check in: ${countdown}s`;
 
-      const interval = setInterval(() => {
-        countdown--;
-        countdownEl.textContent = `Next check in: ${countdown}s`;
-        if (countdown <= 0) {
-          clearInterval(interval);
-          checkInternet();
-          startCountdown();
-        }
-      }, 1000);
-    }
-
-    checkInternet();
-    startCountdown();
-  </script>
-</body>
-</html>
