@@ -20,12 +20,12 @@
     text-align: center;
   }
   #clock {
-    font-size: 5rem;
+    font-size: 6rem;
     font-weight: bold;
     margin-bottom: 1rem;
     z-index: 1;
     position: relative;
-    text-shadow: 0 0 20px #00ff00;
+    text-shadow: 0 0 25px #00ff00;
   }
   #status {
     font-size: 3rem;
@@ -51,7 +51,7 @@
 </head>
 <body>
 <canvas id="background"></canvas>
-<div id="clock">00:00:00</div>
+<div id="clock">00:00</div>
 <div id="status">Checking…</div>
 <div id="countdown">Next check in: 10s</div>
 
@@ -135,11 +135,15 @@
   const clockEl = document.getElementById("clock");
   function updateClock() {
     const now = new Date();
-    const timeStr = now.toLocaleTimeString("en-US", { hour12: false });
+    const timeStr = now.toLocaleTimeString("en-US", { 
+      hour12: false, 
+      hour: "2-digit", 
+      minute: "2-digit" 
+    });
     clockEl.textContent = timeStr;
   }
-  setInterval(updateClock, 1000);
-  updateClock();
+  setInterval(updateClock, 60000); // update once per minute
+  updateClock(); // run immediately on load
 
   // BACKGROUND ANIMATION LOOP
   function animate() {
@@ -163,5 +167,3 @@
 </script>
 </body>
 </html>
-
-
