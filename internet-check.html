@@ -3,20 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Internet Status</title>
+<title>Internet Status with Clock</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
 <style>
   body {
     margin: 0;
     overflow: hidden;
     background: black;
     color: #00ff00;
-    font-family: monospace;
+    font-family: 'Orbitron', monospace;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100vh;
     text-align: center;
+  }
+  #clock {
+    font-size: 5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    z-index: 1;
+    position: relative;
+    text-shadow: 0 0 20px #00ff00;
   }
   #status {
     font-size: 3rem;
@@ -42,6 +51,7 @@
 </head>
 <body>
 <canvas id="background"></canvas>
+<div id="clock">00:00:00</div>
 <div id="status">Checking…</div>
 <div id="countdown">Next check in: 10s</div>
 
@@ -80,8 +90,8 @@
     const buffer = imageData.data;
     for (let i = 0; i < buffer.length; i += 4) {
       const shade = Math.random() * 255;
-      buffer[i] = buffer[i + 1] = buffer[i + 2] = shade; // gray pixel
-      buffer[i + 3] = 255; // alpha
+      buffer[i] = buffer[i + 1] = buffer[i + 2] = shade;
+      buffer[i + 3] = 255;
     }
     ctx.putImageData(imageData, 0, 0);
   }
@@ -121,6 +131,16 @@
     countdownEl.textContent = `Next check in: ${countdown}s`;
   }, 1000);
 
+  // CLOCK
+  const clockEl = document.getElementById("clock");
+  function updateClock() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString("en-US", { hour12: false });
+    clockEl.textContent = timeStr;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
   // BACKGROUND ANIMATION LOOP
   function animate() {
     if (online) {
@@ -143,3 +163,5 @@
 </script>
 </body>
 </html>
+
+
