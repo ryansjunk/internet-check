@@ -41,17 +41,17 @@
 </style>
 </head>
 <body>
-<canvas id="matrix"></canvas>
+<canvas id="background"></canvas>
 <div id="status">Checking…</div>
 <div id="countdown">Next check in: 10s</div>
 
 <script>
-  // MATRIX RAIN
-  const canvas = document.getElementById("matrix");
+  const canvas = document.getElementById("background");
   const ctx = canvas.getContext("2d");
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
+  // MATRIX setup
   const letters = "アァカサタナハマヤラ0123456789".split("");
   const fontSize = 14;
   const columns = Math.floor(canvas.width / fontSize);
@@ -74,48 +74,68 @@
     }
   }
 
-  setInterval(drawMatrix, 33);
+  // STATIC setup
+  function drawStatic() {
+    const imageData = ctx.createImageData(canvas.width, canvas.height);
+    const buffer = imageData.data;
+    for (let i = 0; i < buffer.length; i += 4) {
+      const shade = Math.random() * 255;
+      buffer[i] = buffer[i + 1] = buffer[i + 2] = shade; // gray pixel
+      buffer[i + 3] = 255; // alpha
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }
 
   // INTERNET CHECKER
   const statusEl = document.getElementById("status");
   const countdownEl = document.getElementById("countdown");
-  const url = "https://www.gstatic.com/generate_204";
+  const url = "https://www.gstatic.com/generate_204"; 
   const intervalSeconds = 10;
   let countdown = intervalSeconds;
+  let online = true;
 
-  function updateStatus(online) {
-    statusEl.textContent = online ? "ONLINE ✅" : "OFFLINE ❌";
-    statusEl.style.color = online ? "#00ff00" : "#ff4444";
-  }
-
-  async function checkInternet() {
-    try {
-      // Fetch to Google’s generate_204; success = online
-      fetch(url, { mode: "no-cors", cache: "no-store" })
-        .then(() => updateStatus(true))
-        .catch(() => updateStatus(false));
-    } catch {
-      updateStatus(false);
+  function updateStatus(isOnline) {
+    online = isOnline;
+    if (online) {
+      statusEl.textContent = "ONLINE ✅";
+      statusEl.style.color = "#00ff00";
+    } else {
+      statusEl.textContent = "OFFLINE ❌";
+      statusEl.style.color = "#ff4444";
     }
   }
 
-  // COUNTDOWN (runs independently)
+  function checkInternet() {
+    fetch(url, { mode: "no-cors", cache: "no-store" })
+      .then(() => updateStatus(true))
+      .catch(() => updateStatus(false));
+  }
+
+  // COUNTDOWN
   setInterval(() => {
     countdown--;
     if (countdown <= 0) {
       countdown = intervalSeconds;
-      checkInternet(); // async; does not block countdown
+      checkInternet();
     }
     countdownEl.textContent = `Next check in: ${countdown}s`;
   }, 1000);
 
+  // BACKGROUND ANIMATION LOOP
+  function animate() {
+    if (online) {
+      drawMatrix();
+    } else {
+      drawStatic();
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+
   // Initial check
   checkInternet();
 
-  // Optional: tap anywhere to force check
-  document.body.addEventListener("click", checkInternet);
-
-  // Resize canvas on window change
+  // Resize handling
   window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -123,5 +143,3 @@
 </script>
 </body>
 </html>
-
-
