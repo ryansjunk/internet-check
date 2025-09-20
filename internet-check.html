@@ -1,169 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Internet Status with Clock</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
-<style>
-  body {
-    margin: 0;
-    overflow: hidden;
-    background: black;
-    color: #00ff00;
-    font-family: 'Orbitron', monospace;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    text-align: center;
-  }
-  #clock {
-    font-size: 12rem; /* doubled */
-    font-weight: bold;
-    margin-bottom: 2rem;
-    z-index: 1;
-    position: relative;
-    text-shadow: 0 0 30px #00ff00;
-  }
-  #status {
-    font-size: 3.5rem; /* same strong size */
-    font-weight: bold;
-    z-index: 1;
-    position: relative;
-  }
-  #countdown {
-    font-size: 2.5rem; /* a bit smaller than status */
-    margin-top: 1rem;
-    z-index: 1;
-    position: relative;
-  }
-  canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Internet Status Monitor</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #00ff00;
+      background: black;
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden;
+    }
+    h1 {
+      font-size: 6em; /* BIG clock */
+      margin: 0.2em;
+    }
+    h2 {
+      font-size: 3em; /* Online/Offline */
+      margin: 0.2em;
+    }
+    h3 {
+      font-size: 2em; /* Countdown */
+      margin: 0.2em;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
-<canvas id="background"></canvas>
-<div id="clock">00:00</div>
-<div id="status">Checking…</div>
-<div id="countdown">Next check in: 10s</div>
+  <h1 id="clock">--:--</h1>
+  <h2 id="status">Checking...</h2>
+  <h3 id="countdown">Next check in 10s</h3>
+  <canvas id="matrix"></canvas>
 
-<script>
-  const canvas = document.getElementById("background");
-  const ctx = canvas.getContext("2d");
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  // MATRIX setup
-  const letters = "アァカサタナハマヤラ0123456789".split("");
-  const fontSize = 14;
-  const columns = Math.floor(canvas.width / fontSize);
-  const drops = Array(columns).fill(1);
-
-  function drawMatrix() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#0F0";
-    ctx.font = fontSize + "px monospace";
-
-    for (let i = 0; i < drops.length; i++) {
-      const text = letters[Math.floor(Math.random() * letters.length)];
-      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-        drops[i] = 0;
-      }
-      drops[i]++;
+  <script>
+    // --- CLOCK ---
+    function updateClock() {
+      const now = new Date();
+      let hours = now.getHours().toString().padStart(2, '0');
+      let minutes = now.getMinutes().toString().padStart(2, '0');
+      document.getElementById('clock').textContent = `${hours}:${minutes}`;
     }
-  }
+    setInterval(updateClock, 1000);
+    updateClock();
 
-  // STATIC setup
-  function drawStatic() {
-    const imageData = ctx.createImageData(canvas.width, canvas.height);
-    const buffer = imageData.data;
-    for (let i = 0; i < buffer.length; i += 4) {
-      const shade = Math.random() * 255;
-      buffer[i] = buffer[i + 1] = buffer[i + 2] = shade;
-      buffer[i + 3] = 255;
-    }
-    ctx.putImageData(imageData, 0, 0);
-  }
+    // --- MATRIX BACKGROUND ---
+    const canvas = document.getElementById("matrix");
+    const ctx = canvas.getContext("2d");
 
-  // INTERNET CHECKER
-  const statusEl = document.getElementById("status");
-  const countdownEl = document.getElementById("countdown");
-  const url = "https://www.gstatic.com/generate_204"; 
-  const intervalSeconds = 10;
-  let countdown = intervalSeconds;
-  let online = true;
-
-  function updateStatus(isOnline) {
-    online = isOnline;
-    if (online) {
-      statusEl.textContent = "ONLINE ✅";
-      statusEl.style.color = "#00ff00";
-    } else {
-      statusEl.textContent = "OFFLINE ❌";
-      statusEl.style.color = "#ff4444";
-    }
-  }
-
-  function checkInternet() {
-    fetch(url, { mode: "no-cors", cache: "no-store" })
-      .then(() => updateStatus(true))
-      .catch(() => updateStatus(false));
-  }
-
-  // COUNTDOWN
-  setInterval(() => {
-    countdown--;
-    if (countdown <= 0) {
-      countdown = intervalSeconds;
-      checkInternet();
-    }
-    countdownEl.textContent = `Next check in: ${countdown}s`;
-  }, 1000);
-
-  // CLOCK
-  const clockEl = document.getElementById("clock");
-  function updateClock() {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString("en-US", { 
-      hour12: false, 
-      hour: "2-digit", 
-      minute: "2-digit" 
-    });
-    clockEl.textContent = timeStr;
-  }
-  setInterval(updateClock, 60000); // update once per minute
-  updateClock(); // run immediately on load
-
-  // BACKGROUND ANIMATION LOOP
-  function animate() {
-    if (online) {
-      drawMatrix();
-    } else {
-      drawStatic();
-    }
-    requestAnimationFrame(animate);
-  }
-  animate();
-
-  // Initial check
-  checkInternet();
-
-  // Resize handling
-  window.addEventListener("resize", () => {
-    canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-  });
-</script>
+    canvas.width = window.innerWidth;
+
+    const letters = "アァイィウヴエェオカガキギクグケゲコゴサザシジスズセゼソゾタダチッヂヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモヤユヨラリルレロワンABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const lettersArr = letters.split("");
+
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#0F0";
+      ctx.font = fontSize + "px monospace";
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = lettersArr[Math.floor(Math.random() * lettersArr.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+    setInterval(drawMatrix, 33);
+
+    // --- INTERNET CHECK ---
+    const statusEl = document.getElementById("status");
+    const countdownEl = document.getElementById("countdown");
+    let countdown = 10;
+
+    async function checkConnection() {
+      statusEl.textContent = "Checking...";
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch("https://www.gstatic.com/generate_204", {
+          method: "GET",
+          cache: "no-cache",
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          statusEl.textContent = "✅ ONLINE";
+          statusEl.style.color = "#00ff00";
+        } else {
+          statusEl.textContent = "❌ OFFLINE";
+          statusEl.style.color = "#ff0000";
+        }
+      } catch (error) {
+        statusEl.textContent = "❌ OFFLINE";
+        statusEl.style.color = "#ff0000";
+      }
+      countdown = 10;
+    }
+
+    setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        checkConnection();
+        countdown = 10;
+      }
+      countdownEl.textContent = `Next check in ${countdown}s`;
+    }, 1000);
+
+    checkConnection();
+
+    // --- WAKE LOCK ---
+    let wakeLock = null;
+    async function requestWakeLock() {
+      try {
+        if ("wakeLock" in navigator) {
+          wakeLock = await navigator.wakeLock.request("screen");
+          wakeLock.addEventListener("release", () => {
+            console.log("Wake Lock released");
+          });
+          console.log("Wake Lock active");
+        }
+      } catch (err) {
+        console.error(`${err.name}, ${err.message}`);
+      }
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (wakeLock !== null && document.visibilityState === "visible") {
+        requestWakeLock();
+      }
+    });
+
+    requestWakeLock();
+  </script>
 </body>
 </html>
