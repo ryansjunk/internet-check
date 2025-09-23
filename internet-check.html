@@ -99,7 +99,6 @@
   // INTERNET CHECKER
   const statusEl = document.getElementById("status");
   const countdownEl = document.getElementById("countdown");
-  const url = "https://www.gstatic.com/generate_204"; 
   const intervalSeconds = 10;
   let countdown = intervalSeconds;
   let online = true;
@@ -116,15 +115,8 @@
   }
 
   function checkInternet() {
-    if (!navigator.onLine) {
-      updateStatus(false);
-      return;
-    }
-
-    // Try fetching a small resource to confirm connectivity
-    fetch(url, { cache: "no-store" })
-      .then(() => updateStatus(true))
-      .catch(() => updateStatus(false));
+    // Use navigator.onLine for reliable iOS detection
+    updateStatus(navigator.onLine);
   }
 
   // COUNTDOWN
@@ -170,6 +162,10 @@
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   });
+
+  // Optional: listen for browser events (connect/disconnect)
+  window.addEventListener('online', () => updateStatus(true));
+  window.addEventListener('offline', () => updateStatus(false));
 </script>
 </body>
 </html>
