@@ -116,7 +116,13 @@
   }
 
   function checkInternet() {
-    fetch(url, { mode: "no-cors", cache: "no-store" })
+    if (!navigator.onLine) {
+      updateStatus(false);
+      return;
+    }
+
+    // Try fetching a small resource to confirm connectivity
+    fetch(url, { cache: "no-store" })
       .then(() => updateStatus(true))
       .catch(() => updateStatus(false));
   }
