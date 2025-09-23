@@ -28,19 +28,18 @@
     }
 
     #clock {
-      font-size: 10vw;   /* Bigger clock */
+      font-size: 8vw;
       font-weight: bold;
       margin-bottom: 20px;
     }
 
     #status {
-      font-size: 8vw;   /* Bigger status */
+      font-size: 6vw;
       font-weight: bold;
-      cursor: pointer;
     }
 
     #next-check {
-      font-size: 3vw;   /* Smaller countdown */
+      font-size: 4vw;
       margin-top: 10px;
     }
 
@@ -60,15 +59,6 @@
       );
       z-index: -2;
     }
-
-    /* Hidden video for wake lock */
-    #keepAwake {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      opacity: 0;
-      pointer-events: none;
-    }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
 </head>
@@ -81,11 +71,6 @@
     <div id="status">Checking...</div>
     <div id="next-check"></div>
   </div>
-
-  <!-- Hidden looping video -->
-  <video id="keepAwake" loop muted playsinline>
-    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-  </video>
 
   <script>
     // Matrix background
@@ -121,7 +106,6 @@
     const nextCheckEl = document.getElementById("next-check");
     const clockEl = document.getElementById("clock");
     const staticBg = document.getElementById("bg-static");
-    const video = document.getElementById("keepAwake");
 
     // Clock
     function updateClock() {
@@ -169,11 +153,6 @@
     // First run
     checkConnection();
     countdown();
-
-    // Tap Online status to start hidden video
-    statusEl.addEventListener("click", () => {
-      video.play().catch(err => console.log("Autoplay blocked:", err));
-    });
 
     // Resize handler
     window.addEventListener("resize", () => {
