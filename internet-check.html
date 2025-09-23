@@ -32,6 +32,7 @@
     font-weight: bold;
     z-index: 1;
     position: relative;
+    cursor: pointer; /* tap to play hidden video */
   }
   #countdown {
     font-size: 1.8rem; /* smaller next check */
@@ -47,6 +48,9 @@
     height: 100%;
     z-index: 0;
   }
+  video {
+    display: none; /* hidden silent video for keep-awake */
+  }
 </style>
 </head>
 <body>
@@ -54,6 +58,11 @@
 <div id="clock">00:00</div>
 <div id="status">Checking…</div>
 <div id="countdown">Next check in: 10s</div>
+
+<!-- Hidden silent video to keep iPad awake -->
+<video id="keepAwake" playsinline loop muted>
+  <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+</video>
 
 <script>
   const canvas = document.getElementById("background");
@@ -106,7 +115,7 @@
   function updateStatus(isOnline) {
     online = isOnline;
     if (online) {
-      statusEl.textContent = "ONLINE ✅";
+      statusEl.textContent = "ONLINE ✅ (tap me to stay awake)";
       statusEl.style.color = "#00ff00";
     } else {
       statusEl.textContent = "OFFLINE ❌";
@@ -115,7 +124,6 @@
   }
 
   function checkInternet() {
-    // Use navigator.onLine for reliable iOS detection
     updateStatus(navigator.onLine);
   }
 
@@ -140,8 +148,8 @@
     });
     clockEl.textContent = timeStr;
   }
-  setInterval(updateClock, 60000); // update once per minute
-  updateClock(); // run immediately on load
+  setInterval(updateClock, 60000); 
+  updateClock();
 
   // BACKGROUND ANIMATION LOOP
   function animate() {
@@ -163,7 +171,15 @@
     canvas.height = window.innerHeight;
   });
 
-  // Optional: listen for browser events (connect/disconnect)
+  // Keep-awake hidden video
+  const video = document.getElementById("keepAwake");
+  statusEl.addEventListener("click", () => {
+    if (online) {
+      video.play().catch(err => console.log("Autoplay blocked:", err));
+    }
+  });
+
+  // Listen for browser events
   window.addEventListener('online', () => updateStatus(true));
   window.addEventListener('offline', () => updateStatus(false));
 </script>
