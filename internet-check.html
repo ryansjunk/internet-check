@@ -20,7 +20,7 @@
     text-align: center;
   }
   #clock {
-    font-size: 16rem; 
+    font-size: 12rem;
     font-weight: bold;
     margin-bottom: 2rem;
     z-index: 1;
@@ -28,14 +28,13 @@
     text-shadow: 0 0 30px #00ff00;
   }
   #status {
-    font-size: 5rem; 
+    font-size: 3.5rem;
     font-weight: bold;
     z-index: 1;
     position: relative;
-    cursor: pointer;
   }
   #countdown {
-    font-size: 1.8rem; 
+    font-size: 2.5rem;
     margin-top: 1rem;
     z-index: 1;
     position: relative;
@@ -56,9 +55,7 @@
 <div id="status">Checking…</div>
 <div id="countdown">Next check in: 10s</div>
 
-<!-- Load NoSleep.js from CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"></script>
-
 <script>
   const canvas = document.getElementById("background");
   const ctx = canvas.getContext("2d");
@@ -76,9 +73,11 @@
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#0F0";
     ctx.font = fontSize + "px monospace";
+
     for (let i = 0; i < drops.length; i++) {
       const text = letters[Math.floor(Math.random() * letters.length)];
       ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
       if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
         drops[i] = 0;
       }
@@ -101,23 +100,29 @@
   // INTERNET CHECKER
   const statusEl = document.getElementById("status");
   const countdownEl = document.getElementById("countdown");
+  const url = "https://www.gstatic.com/generate_204"; 
   const intervalSeconds = 10;
   let countdown = intervalSeconds;
   let online = true;
+  let lastStatusText = "Checking…";
 
   function updateStatus(isOnline) {
     online = isOnline;
     if (online) {
-      statusEl.textContent = "ONLINE ✅";
+      lastStatusText = "ONLINE ✅";
+      statusEl.textContent = lastStatusText;
       statusEl.style.color = "#00ff00";
     } else {
-      statusEl.textContent = "OFFLINE ❌";
+      lastStatusText = "OFFLINE ❌";
+      statusEl.textContent = lastStatusText;
       statusEl.style.color = "#ff4444";
     }
   }
 
   function checkInternet() {
-    updateStatus(navigator.onLine);
+    fetch(url, { mode: "no-cors", cache: "no-store" })
+      .then(() => updateStatus(true))
+      .catch(() => updateStatus(false));
   }
 
   // COUNTDOWN
@@ -141,10 +146,10 @@
     });
     clockEl.textContent = timeStr;
   }
-  setInterval(updateClock, 60000); 
+  setInterval(updateClock, 60000);
   updateClock();
 
-  // BACKGROUND ANIMATION
+  // BACKGROUND ANIMATION LOOP
   function animate() {
     if (online) {
       drawMatrix();
@@ -158,23 +163,25 @@
   // Initial check
   checkInternet();
 
-  // Resize
+  // Resize handling
   window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   });
 
-  // === NoSleep integration ===
+  // NoSleep setup
   const noSleep = new NoSleep();
-  statusEl.addEventListener("click", () => {
-    if (online) {
-      noSleep.enable();  // keep iPad awake
-      console.log("NoSleep enabled");
-    }
-  });
-
-  window.addEventListener('online', () => updateStatus(true));
-  window.addEventListener('offline', () => updateStatus(false));
+  document.addEventListener("click", () => {
+    noSleep.enable();
+    // Flash confirmation for 2 seconds
+    const originalText = lastStatusText;
+    statusEl.textContent = "AWAKE MODE ON";
+    statusEl.style.color = "#00ff00";
+    setTimeout(() => {
+      statusEl.textContent = originalText;
+      statusEl.style.color = online ? "#00ff00" : "#ff4444";
+    }, 2000);
+  }, { once: true });
 </script>
 </body>
 </html>
