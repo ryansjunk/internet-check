@@ -48,9 +48,6 @@
     height: 100%;
     z-index: 0;
   }
-  video {
-    display: none; 
-  }
 </style>
 </head>
 <body>
@@ -59,9 +56,8 @@
 <div id="status">Checking…</div>
 <div id="countdown">Next check in: 10s</div>
 
-<video id="keepAwake" playsinline loop muted>
-  <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-</video>
+<!-- Load NoSleep.js from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"></script>
 
 <script>
   const canvas = document.getElementById("background");
@@ -69,6 +65,7 @@
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
+  // MATRIX setup
   const letters = "アァカサタナハマヤラ0123456789".split("");
   const fontSize = 14;
   const columns = Math.floor(canvas.width / fontSize);
@@ -89,6 +86,7 @@
     }
   }
 
+  // STATIC setup
   function drawStatic() {
     const imageData = ctx.createImageData(canvas.width, canvas.height);
     const buffer = imageData.data;
@@ -100,6 +98,7 @@
     ctx.putImageData(imageData, 0, 0);
   }
 
+  // INTERNET CHECKER
   const statusEl = document.getElementById("status");
   const countdownEl = document.getElementById("countdown");
   const intervalSeconds = 10;
@@ -121,6 +120,7 @@
     updateStatus(navigator.onLine);
   }
 
+  // COUNTDOWN
   setInterval(() => {
     countdown--;
     if (countdown <= 0) {
@@ -130,6 +130,7 @@
     countdownEl.textContent = `Next check in: ${countdown}s`;
   }, 1000);
 
+  // CLOCK
   const clockEl = document.getElementById("clock");
   function updateClock() {
     const now = new Date();
@@ -143,6 +144,7 @@
   setInterval(updateClock, 60000); 
   updateClock();
 
+  // BACKGROUND ANIMATION
   function animate() {
     if (online) {
       drawMatrix();
@@ -153,17 +155,21 @@
   }
   animate();
 
+  // Initial check
   checkInternet();
 
+  // Resize
   window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   });
 
-  const video = document.getElementById("keepAwake");
+  // === NoSleep integration ===
+  const noSleep = new NoSleep();
   statusEl.addEventListener("click", () => {
     if (online) {
-      video.play().catch(err => console.log("Autoplay blocked:", err));
+      noSleep.enable();  // keep iPad awake
+      console.log("NoSleep enabled");
     }
   });
 
