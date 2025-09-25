@@ -20,7 +20,7 @@
     text-align: center;
   }
   #clock {
-    font-size: 12rem;
+    font-size: 14rem; /* bigger clock */
     font-weight: bold;
     margin-bottom: 2rem;
     z-index: 1;
@@ -28,13 +28,13 @@
     text-shadow: 0 0 30px #00ff00;
   }
   #status {
-    font-size: 3.5rem;
+    font-size: 4rem; /* larger online/offline */
     font-weight: bold;
     z-index: 1;
     position: relative;
   }
   #countdown {
-    font-size: 2.5rem;
+    font-size: 2rem; /* smaller next check */
     margin-top: 1rem;
     z-index: 1;
     position: relative;
@@ -104,19 +104,17 @@
   const intervalSeconds = 10;
   let countdown = intervalSeconds;
   let online = true;
-  let lastStatusText = "Checking…";
 
   function updateStatus(isOnline) {
     online = isOnline;
     if (online) {
-      lastStatusText = "ONLINE ✅";
-      statusEl.textContent = lastStatusText;
+      statusEl.textContent = "ONLINE ✅";
       statusEl.style.color = "#00ff00";
     } else {
-      lastStatusText = "OFFLINE ❌";
-      statusEl.textContent = lastStatusText;
+      statusEl.textContent = "OFFLINE ❌";
       statusEl.style.color = "#ff4444";
     }
+    lastStatusText = statusEl.textContent;
   }
 
   function checkInternet() {
@@ -146,7 +144,7 @@
     });
     clockEl.textContent = timeStr;
   }
-  setInterval(updateClock, 60000);
+  setInterval(updateClock, 60000); 
   updateClock();
 
   // BACKGROUND ANIMATION LOOP
@@ -169,19 +167,27 @@
     canvas.height = window.innerHeight;
   });
 
-  // NoSleep setup
+  // ---- NO SLEEP FEATURE ----
   const noSleep = new NoSleep();
+  let awake = false;
+  let lastStatusText = "Checking…";
+
   document.addEventListener("click", () => {
-    noSleep.enable();
-    // Flash confirmation for 2 seconds
-    const originalText = lastStatusText;
-    statusEl.textContent = "AWAKE MODE ON";
-    statusEl.style.color = "#00ff00";
-    setTimeout(() => {
-      statusEl.textContent = originalText;
-      statusEl.style.color = online ? "#00ff00" : "#ff4444";
-    }, 2000);
-  }, { once: true });
+    if (!awake) {
+      noSleep.enable();
+      awake = true;
+
+      // Flash "AWAKE MODE ON"
+      statusEl.textContent = "AWAKE MODE ON";
+      statusEl.style.color = "#00ff00";
+      setTimeout(() => {
+        statusEl.textContent = lastStatusText;
+        statusEl.style.color = online ? "#00ff00" : "#ff4444";
+      }, 2000);
+    }
+  });
 </script>
 </body>
 </html>
+
+
