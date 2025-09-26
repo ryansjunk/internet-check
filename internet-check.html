@@ -120,11 +120,13 @@
         window.addEventListener('offline', updateStatus);
         updateStatus();
 
-        // Matrix Effect
+        // Matrix Effect with NSFW Words
         const matrixCtx = matrixCanvas.getContext('2d');
         matrixCanvas.height = window.innerHeight;
         matrixCanvas.width = window.innerWidth;
-        const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const chars = 'アァカサタナハマヤラ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        const nsfwWords = ['DAMN', 'HELL', 'SHIT', 'FUCK', 'CUMINMYASS', 'CUMINME', 'SITONYMFACE', 'EATMYASS', 'SUCKMYCOCK', 'FUCKMYASS', 'COCK', 'CRAP']; // NSFW words
+        const allChars = [...chars, ...nsfwWords]; // Combine characters and words
         const fontSize = 14;
         const columns = matrixCanvas.width / fontSize;
         const drops = Array(Math.floor(columns)).fill(0);
@@ -136,7 +138,9 @@
             matrixCtx.font = `${fontSize}px monospace`;
 
             for (let i = 0; i < drops.length; i++) {
-                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                // Randomly choose a single character or NSFW word (words are less frequent)
+                const isWord = Math.random() < 0.05; // 5% chance for a word
+                const text = isWord ? nsfwWords[Math.floor(Math.random() * nsfwWords.length)] : chars[Math.floor(Math.random() * chars.length)];
                 matrixCtx.fillText(text, i * fontSize, drops[i] * fontSize);
                 if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) {
                     drops[i] = 0;
@@ -181,4 +185,3 @@
     </script>
 </body>
 </html>
-
