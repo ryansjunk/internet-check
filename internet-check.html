@@ -10,7 +10,6 @@
     margin: 0;
     overflow: hidden;
     background: black;
-    color: #00ff00;
     font-family: 'Orbitron', monospace;
     display: flex;
     flex-direction: column;
@@ -18,6 +17,22 @@
     justify-content: center;
     height: 100vh;
     text-align: center;
+    color: #00ff00;
+  }
+  canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+  #overlay {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   #clock {
     font-size: 12rem;
@@ -28,37 +43,36 @@
   #status {
     font-size: 3.5rem;
     font-weight: bold;
-    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   #countdown {
-    font-size: 2rem;
+    font-size: 2.5rem;
     margin-top: 1rem;
-  }
-  canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
   }
   video.symbol {
-    width: 120px;
-    height: 120px;
-    display: none;
-    margin-top: 1rem;
+    width: 80px;
+    height: 80px;
+    margin-left: 10px;
   }
 </style>
 </head>
 <body>
 <canvas id="background"></canvas>
-<div id="clock">00:00</div>
-<div id="status">Checking…</div>
-<video id="checkmark" class="symbol" muted loop playsinline></video>
-<video id="cross" class="symbol" muted loop playsinline></video>
-<div id="countdown">Next check in: 10s</div>
+
+<div id="overlay">
+  <div id="clock">00:00</div>
+  <div id="status">
+    Checking…
+    <video id="checkmark" class="symbol" muted loop playsinline></video>
+    <video id="cross" class="symbol" muted loop playsinline></video>
+  </div>
+  <div id="countdown">Next check in: 10s</div>
+</div>
 
 <script>
+  // Canvas setup
   const canvas = document.getElementById("background");
   const ctx = canvas.getContext("2d");
   canvas.width = window.innerWidth;
@@ -70,14 +84,14 @@
   const drops = Array(columns).fill(1);
 
   function drawMatrix() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(0,0,0,0.05)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = "#0F0";
     ctx.font = fontSize + "px monospace";
-    for (let i = 0; i < drops.length; i++) {
-      const text = letters[Math.floor(Math.random() * letters.length)];
-      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+    for(let i=0;i<drops.length;i++){
+      const text = letters[Math.floor(Math.random()*letters.length)];
+      ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+      if(drops[i]*fontSize > canvas.height && Math.random()>0.975){
         drops[i] = 0;
       }
       drops[i]++;
@@ -85,99 +99,98 @@
   }
 
   function drawStatic() {
-    const imageData = ctx.createImageData(canvas.width, canvas.height);
+    const imageData = ctx.createImageData(canvas.width,canvas.height);
     const buffer = imageData.data;
-    for (let i = 0; i < buffer.length; i += 4) {
-      const shade = Math.random() * 255;
-      buffer[i] = buffer[i + 1] = buffer[i + 2] = shade;
-      buffer[i + 3] = 255;
+    for(let i=0;i<buffer.length;i+=4){
+      const shade = Math.random()*255;
+      buffer[i]=buffer[i+1]=buffer[i+2]=shade;
+      buffer[i+3]=255;
     }
-    ctx.putImageData(imageData, 0, 0);
+    ctx.putImageData(imageData,0,0);
   }
 
+  // Elements
   const statusEl = document.getElementById("status");
   const countdownEl = document.getElementById("countdown");
   const clockEl = document.getElementById("clock");
   const checkmarkVideo = document.getElementById("checkmark");
   const crossVideo = document.getElementById("cross");
 
-  // Placeholder tiny green checkmark video (1s loop)
+  // Placeholder tiny looping videos (replace later with real animations)
   checkmarkVideo.src = "data:video/mp4;base64,AAAAHGZ0eXBNNA==";
-  // Placeholder tiny red cross flashing video (1s loop)
   crossVideo.src = "data:video/mp4;base64,AAAAHGZ0eXBNNA==";
 
-  const url = "https://www.gstatic.com/generate_204"; 
+  const url = "https://www.gstatic.com/generate_204";
   const intervalSeconds = 10;
   let countdown = intervalSeconds;
   let online = true;
 
-  function updateStatus(isOnline) {
+  function updateStatus(isOnline){
     online = isOnline;
-    if (online) {
-      statusEl.textContent = "ONLINE";
+    if(online){
+      statusEl.childNodes[0].textContent = "ONLINE";
       statusEl.style.color = "#00ff00";
-      checkmarkVideo.style.display = "block";
-      crossVideo.style.display = "none";
+      checkmarkVideo.style.display="inline";
+      crossVideo.style.display="none";
       checkmarkVideo.play();
     } else {
-      statusEl.textContent = "OFFLINE";
-      statusEl.style.color = "#ff4444";
-      crossVideo.style.display = "block";
-      checkmarkVideo.style.display = "none";
+      statusEl.childNodes[0].textContent = "OFFLINE";
+      statusEl.style.color="#ff4444";
+      crossVideo.style.display="inline";
+      checkmarkVideo.style.display="none";
       crossVideo.play();
     }
   }
 
-  function checkInternet() {
-    fetch(url, { mode: "no-cors", cache: "no-store" })
-      .then(() => updateStatus(true))
-      .catch(() => updateStatus(false));
+  async function checkInternet(){
+    try{
+      await fetch(url,{mode:"no-cors",cache:"no-store"});
+      updateStatus(true);
+    } catch(e){
+      updateStatus(false);
+    }
   }
 
-  setInterval(() => {
+  // Countdown & periodic check
+  setInterval(()=>{
     countdown--;
-    if (countdown <= 0) {
-      countdown = intervalSeconds;
+    if(countdown<0){
+      countdown=intervalSeconds;
       checkInternet();
     }
     countdownEl.textContent = `Next check in: ${countdown}s`;
-  }, 1000);
+  },1000);
 
-  function updateClock() {
+  // Clock
+  function updateClock(){
     const now = new Date();
-    const timeStr = now.toLocaleTimeString("en-US", { 
-      hour12: false, 
-      hour: "2-digit", 
-      minute: "2-digit" 
-    });
-    clockEl.textContent = timeStr;
+    clockEl.textContent = now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",hour12:false});
   }
-  setInterval(updateClock, 60000);
+  setInterval(updateClock,60000);
   updateClock();
 
-  function animate() {
-    if (online) {
-      drawMatrix();
-    } else {
-      drawStatic();
-    }
+  // Animation loop
+  function animate(){
+    if(online) drawMatrix();
+    else drawStatic();
     requestAnimationFrame(animate);
   }
   animate();
 
+  // Initial check
   checkInternet();
-  window.addEventListener("resize", () => {
+
+  window.addEventListener("resize",()=>{
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   });
 
-  // Start videos on first tap (required by Safari)
-  document.body.addEventListener("click", () => {
+  // Tap to start videos / keep awake
+  document.body.addEventListener("click",()=>{
     checkmarkVideo.play();
     crossVideo.play();
-    alert("✅ Animation keep-awake mode started!");
-  }, { once: true });
+    alert("✅ Keep-awake mode activated!");
+  },{once:true});
 </script>
 </body>
 </html>
-
