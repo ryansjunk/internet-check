@@ -20,7 +20,7 @@
     text-align: center;
   }
   #clock {
-    font-size: 14rem; /* bigger clock */
+    font-size: 14rem; /* big clock */
     font-weight: bold;
     margin-bottom: 2rem;
     z-index: 1;
@@ -28,7 +28,7 @@
     text-shadow: 0 0 30px #00ff00;
   }
   #status {
-    font-size: 4rem; /* larger online/offline */
+    font-size: 4rem; /* large online/offline */
     font-weight: bold;
     z-index: 1;
     position: relative;
@@ -54,6 +54,11 @@
 <div id="clock">00:00</div>
 <div id="status">Checking…</div>
 <div id="countdown">Next check in: 10s</div>
+
+<!-- Hidden debug video (Safari needs this to keep screen awake) -->
+<video id="debugVideo" autoplay muted playsinline loop style="display:none">
+  <source src="data:video/mp4;base64,AAAAHGZ0eXBpc28yAAACAGlzbzJpc28yYXZjMW1wNDEAAAAIZnJlZQAACG1kYXQhEA==" type="video/mp4">
+</video>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"></script>
 <script>
@@ -104,6 +109,7 @@
   const intervalSeconds = 10;
   let countdown = intervalSeconds;
   let online = true;
+  let lastStatusText = "Checking…";
 
   function updateStatus(isOnline) {
     online = isOnline;
@@ -144,7 +150,7 @@
     });
     clockEl.textContent = timeStr;
   }
-  setInterval(updateClock, 60000); 
+  setInterval(updateClock, 60000);
   updateClock();
 
   // BACKGROUND ANIMATION LOOP
@@ -169,25 +175,20 @@
 
   // ---- NO SLEEP FEATURE ----
   const noSleep = new NoSleep();
-  let awake = false;
-  let lastStatusText = "Checking…";
 
   document.addEventListener("click", () => {
-    if (!awake) {
-      noSleep.enable();
-      awake = true;
+    noSleep.enable(); // force awake on every tap
 
-      // Flash "AWAKE MODE ON"
-      statusEl.textContent = "AWAKE MODE ON";
-      statusEl.style.color = "#00ff00";
-      setTimeout(() => {
-        statusEl.textContent = lastStatusText;
-        statusEl.style.color = online ? "#00ff00" : "#ff4444";
-      }, 2000);
-    }
+    // Flash confirmation
+    statusEl.textContent = "AWAKE MODE ON";
+    statusEl.style.color = "#00ff00";
+    setTimeout(() => {
+      statusEl.textContent = lastStatusText;
+      statusEl.style.color = online ? "#00ff00" : "#ff4444";
+    }, 2000);
+
+    console.log("NoSleep attempted.");
   });
 </script>
 </body>
 </html>
-
-
