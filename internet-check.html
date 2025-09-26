@@ -19,7 +19,7 @@
             background: #000;
         }
         #clock {
-            font-size: 300px;
+            font-size: 360px;
             position: absolute;
             top: 20px;
             z-index: 10;
@@ -61,9 +61,35 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: url('https://i.giphy.com/media/3o6Zta4k5fQ7gH5p4k/giphy.gif') no-repeat center/cover;
             z-index: 1;
             display: none;
+            background: #000;
+            overflow: hidden;
+        }
+        #static::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="none"/><g fill="rgba(255,255,255,0.2)"><circle cx="50" cy="50" r="50"/></g></svg>') repeat;
+            filter: url(#staticNoise);
+            animation: staticFlicker 0.1s infinite;
+            opacity: 0.8;
+        }
+        @keyframes staticFlicker {
+            0% { opacity: 0.8; transform: translate(0, 0); }
+            25% { opacity: 0.7; transform: translate(2px, 2px); }
+            50% { opacity: 0.9; transform: translate(-2px, -2px); }
+            75% { opacity: 0.7; transform: translate(1px, -1px); }
+            100% { opacity: 0.8; transform: translate(0, 0); }
+        }
+        /* SVG filter for noise effect */
+        svg#noiseFilter {
+            position: absolute;
+            width: 0;
+            height: 0;
         }
     </style>
 </head>
@@ -75,6 +101,13 @@
     <video id="keepAwake" style="display: none;" loop muted>
         <source src="https://cdn.pixabay.com/video/2023/03/06/152774-805054614_tiny.mp4" type="video/mp4">
     </video>
+    <svg id="noiseFilter">
+        <filter id="staticNoise">
+            <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" stitchTiles="stitch"/>
+            <feColorMatrix type="saturate" values="0"/>
+            <feBlend mode="overlay"/>
+        </filter>
+    </svg>
     <script>
         // Clock
         function updateClock() {
@@ -149,4 +182,3 @@
     </script>
 </body>
 </html>
-
