@@ -11,9 +11,9 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      color: #0f0;
       background: black;
-      font-family: 'Courier New', monospace;
+      color: #0f0;
+      font-family: Arial, sans-serif;
       text-align: center;
       overflow: hidden;
     }
@@ -26,18 +26,19 @@
       z-index: -1;
       pointer-events: none;
     }
-    #status {
-      font-size: 4em;
-      font-weight: bold;
-    }
     #time {
+      font-size: 8em;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    #status {
       font-size: 6em;
       font-weight: bold;
       margin-top: 10px;
     }
     #nextCheck {
       font-size: 1.5em;
-      margin-top: 20px;
+      margin-top: 15px;
     }
     canvas {
       display: block;
@@ -47,11 +48,11 @@
 <body>
   <canvas id="matrix"></canvas>
   <canvas id="static"></canvas>
-  <div id="status">Checking...</div>
   <div id="time"></div>
+  <div id="status">Checking...</div>
   <div id="nextCheck"></div>
 
-  <!-- Hidden tiny video for keep-awake trick -->
+  <!-- Hidden looping video -->
   <video id="keepAwakeVideo" playsinline muted loop style="display:none; width:1px; height:1px;">
     <source src="data:video/mp4;base64,AAAAHGZ0eXBNNA==" type="video/mp4">
   </video>
@@ -132,7 +133,7 @@
       try {
         const response = await fetch("https://www.google.com/favicon.ico?_=" + Date.now(), {mode: "no-cors"});
         if (response) {
-          statusDiv.textContent = "ONLINE";
+          statusDiv.textContent = "✅ ONLINE";
           statusDiv.style.color = "#0f0";
           showMatrix();
         }
@@ -157,18 +158,23 @@
     // First connection check
     checkConnection();
 
-    // Wake-lock trick
+    // Wake-lock video tap
     let wakeEnabled = false;
     document.body.addEventListener("click", () => {
       if (!wakeEnabled) {
         video.play().then(() => {
           wakeEnabled = true;
-          alert("✅ Keep-awake mode enabled. Screen should now stay on while this page is open.");
+          alert("✅ Keep-awake mode is now ON");
+          console.log("Keep-awake video started");
         }).catch(err => {
-          alert("⚠️ Could not start keep-awake video: " + err);
+          alert("⚠️ Could not enable keep-awake: " + err);
+          console.error(err);
         });
+      } else {
+        alert("ℹ️ Keep-awake mode already active");
       }
     });
   </script>
 </body>
 </html>
+
