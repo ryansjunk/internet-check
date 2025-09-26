@@ -25,9 +25,25 @@
             text-shadow: 0 0 10px #0f0;
         }
         #status {
-            font-size: 24px;
+            font-size: 100px;
             margin-top: 80px;
             z-index: 10;
+            display: none;
+        }
+        #status.online {
+            display: block;
+            color: green;
+            animation: pulse 2s infinite;
+        }
+        #status.offline {
+            display: block;
+            color: red;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); text-shadow: 0 0 10px currentColor; }
+            50% { transform: scale(1.2); text-shadow: 0 0 20px currentColor; }
+            100% { transform: scale(1); text-shadow: 0 0 10px currentColor; }
         }
         button {
             padding: 10px 20px;
@@ -76,7 +92,7 @@
 </head>
 <body>
     <div id="clock"></div>
-    <div id="status"></div>
+    <div id="status">✓</div>
     <button onclick="playVideo()">Play Video</button>
     <canvas id="matrixCanvas"></canvas>
     <div id="static"></div>
@@ -104,13 +120,13 @@
 
         function updateStatus() {
             if (navigator.onLine) {
-                status.textContent = 'Online';
-                status.style.color = 'green';
+                status.textContent = '✓';
+                status.className = 'online';
                 matrixCanvas.style.display = 'block';
                 staticDiv.style.display = 'none';
             } else {
-                status.textContent = 'Offline';
-                status.style.color = 'red';
+                status.textContent = '✗';
+                status.className = 'offline';
                 matrixCanvas.style.display = 'none';
                 staticDiv.style.display = 'block';
             }
@@ -149,11 +165,11 @@
         const keepAwakeVideo = document.getElementById('keepAwake');
         keepAwakeVideo.play().catch(() => console.log('Keep-awake video failed to play'));
 
-        // Video Playback
+        // Video Playback (Placeholder)
         const videoPlayer = document.getElementById('videoPlayer');
         function playVideo() {
-            videoPlayer.style.display = 'block';
-            videoPlayer.play().catch(() => alert('Error playing video. Check the video source.'));
+            alert('No video selected yet. Add a video URL to the <source> tag.');
+            // Example: videoPlayer.style.display = 'block'; videoPlayer.play();
         }
 
         // Resize Canvas on Window Resize
