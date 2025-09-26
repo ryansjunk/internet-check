@@ -19,7 +19,7 @@
             background: #000;
         }
         #clock {
-            font-size: 300px;
+            font-size: 280px;
             position: absolute;
             top: 20px;
             z-index: 10;
@@ -30,6 +30,8 @@
             margin-top: 300px;
             z-index: 10;
             display: none;
+            font-weight: 700;
+            letter-spacing: 0;
         }
         #status.online {
             display: block;
@@ -55,7 +57,7 @@
             z-index: 1;
             display: none;
         }
-        #static {
+        #staticCanvas {
             position: fixed;
             top: 0;
             left: 0;
@@ -64,24 +66,6 @@
             z-index: 1;
             display: none;
             background: #000;
-            overflow: hidden;
-        }
-        #static::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="none"/><g fill="rgba(255,255,255,0.2)"><circle cx="50" cy="50" r="50"/></g></svg>') repeat;
-            filter: url(#staticNoise);
-            opacity: 0.8;
-        }
-        /* SVG filter for noise effect */
-        svg#noiseFilter {
-            position: absolute;
-            width: 0;
-            height: 0;
         }
     </style>
 </head>
@@ -89,17 +73,10 @@
     <div id="clock"></div>
     <div id="status">✓</div>
     <canvas id="matrixCanvas"></canvas>
-    <div id="static"></div>
+    <canvas id="staticCanvas"></canvas>
     <video id="keepAwake" style="display: none;" loop muted>
         <source src="https://cdn.pixabay.com/video/2023/03/06/152774-805054614_tiny.mp4" type="video/mp4">
     </video>
-    <svg id="noiseFilter">
-        <filter id="staticNoise">
-            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/>
-            <feColorMatrix type="saturate" values="0"/>
-            <feBlend mode="overlay"/>
-        </filter>
-    </svg>
     <script>
         // Clock
         function updateClock() {
@@ -117,19 +94,19 @@
         // Internet Status and Background
         const status = document.getElementById('status');
         const matrixCanvas = document.getElementById('matrixCanvas');
-        const staticDiv = document.getElementById('static');
+        const staticCanvas = document.getElementById('staticCanvas');
 
         function updateStatus() {
             if (navigator.onLine) {
                 status.textContent = '✓';
                 status.className = 'online';
                 matrixCanvas.style.display = 'block';
-                staticDiv.style.display = 'none';
+                staticCanvas.style.display = 'none';
             } else {
-                status.textContent = '✗';
+                status.textContent = 'X';
                 status.className = 'offline';
                 matrixCanvas.style.display = 'none';
-                staticDiv.style.display = 'block';
+                staticCanvas.style.display = 'block';
             }
         }
         window.addEventListener('online', updateStatus);
@@ -137,7 +114,7 @@
         updateStatus();
 
         // Matrix Effect
-        const ctx = matrixCanvas.getContext('2d');
+        const matrixCtx = matrixCanvas.getContext('2d');
         matrixCanvas.height = window.innerHeight;
         matrixCanvas.width = window.innerWidth;
         const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -146,14 +123,14 @@
         const drops = Array(Math.floor(columns)).fill(0);
 
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-            ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
-            ctx.fillStyle = '#0F0';
-            ctx.font = `${fontSize}px monospace`;
+            matrixCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+            matrixCtx.fillStyle = '#0F0';
+            matrixCtx.font = `${fontSize}px monospace`;
 
             for (let i = 0; i < drops.length; i++) {
                 const text = chars.charAt(Math.floor(Math.random() * chars.length));
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                matrixCtx.fillText(text, i * fontSize, drops[i] * fontSize);
                 if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) {
                     drops[i] = 0;
                 }
@@ -162,14 +139,37 @@
         }
         setInterval(drawMatrix, 33);
 
+        // TV Static Effect
+        const staticCtx = staticCanvas.getContext('2d');
+        staticCanvas.height = window.innerHeight;
+        staticCanvas.width = window.innerWidth;
+
+        function drawStatic() {
+            const imageData = staticCtx.createImageData(staticCanvas.width, staticCanvas.height);
+            const data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const value = Math.random() > 0.5 ? 255 : 0; // Black or white for high contrast
+                data[i] = value;     // Red
+                data[i + 1] = value; // Green
+                data[i + 2] = value; // Blue
+                data[i + 3] = 255;   // Alpha (opaque)
+            }
+
+            staticCtx.putImageData(imageData, 0, 0);
+        }
+        setInterval(drawStatic, 100); // Update every 100ms for smooth, non-flashy animation
+
         // Keep iPad Awake
         const keepAwakeVideo = document.getElementById('keepAwake');
         keepAwakeVideo.play().catch(() => console.log('Keep-awake video failed to play'));
 
-        // Resize Canvas on Window Resize
+        // Resize Canvases on Window Resize
         window.addEventListener('resize', () => {
             matrixCanvas.height = window.innerHeight;
             matrixCanvas.width = window.innerWidth;
+            staticCanvas.height = window.innerHeight;
+            staticCanvas.width = window.innerWidth;
         });
     </script>
 </body>
