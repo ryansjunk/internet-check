@@ -120,16 +120,16 @@
         window.addEventListener('offline', updateStatus);
         updateStatus();
 
-        // Matrix Effect with NSFW Words
+        // Matrix Effect with Vertical NSFW Words
         const matrixCtx = matrixCanvas.getContext('2d');
         matrixCanvas.height = window.innerHeight;
         matrixCanvas.width = window.innerWidth;
         const chars = 'アァカサタナハマヤラ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        const nsfwWords = ['DAMN', 'HELL', 'SHIT', 'FUCK', 'CUMINMYASS', 'CUMINME', 'SITONYMFACE', 'EATMYASS', 'SUCKMYCOCK', 'FUCKMYASS', 'COCK', 'CRAP']; // NSFW words
-        const allChars = [...chars, ...nsfwWords]; // Combine characters and words
+        const nsfwWords = ['DAMN', 'HELL', 'SHIT', 'FUCK', 'CUMINMYASS', 'CUMINME', 'SITONYMFACE', 'EATMYASS', 'SUCKMYCOCK', 'FUCKMYASS', 'COCK'];
         const fontSize = 14;
         const columns = matrixCanvas.width / fontSize;
         const drops = Array(Math.floor(columns)).fill(0);
+        const columnState = Array(Math.floor(columns)).fill(null); // Track word and letter index
 
         function drawMatrix() {
             matrixCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
@@ -138,12 +138,32 @@
             matrixCtx.font = `${fontSize}px monospace`;
 
             for (let i = 0; i < drops.length; i++) {
-                // Randomly choose a single character or NSFW word (words are less frequent)
-                const isWord = Math.random() < 0.05; // 5% chance for a word
-                const text = isWord ? nsfwWords[Math.floor(Math.random() * nsfwWords.length)] : chars[Math.floor(Math.random() * chars.length)];
+                let text;
+                if (columnState[i] && columnState[i].letterIndex < columnState[i].word.length) {
+                    // Continue displaying the next letter of the current word
+                    text = columnState[i].word[columnState[i].letterIndex];
+                    columnState[i].letterIndex++;
+                    if (columnState[i].letterIndex >= columnState[i].word.length) {
+                        columnState[i] = null; // Word is done, reset to random chars
+                    }
+                } else {
+                    // Decide whether to start a new word (5% chance) or use a random char
+                    if (Math.random() < 0.05 && !columnState[i]) {
+                        columnState[i] = {
+                            word: nsfwWords[Math.floor(Math.random() * nsfwWords.length)],
+                            letterIndex: 0
+                        };
+                        text = columnState[i].word[0];
+                        columnState[i].letterIndex++;
+                    } else {
+                        text = chars[Math.floor(Math.random() * chars.length)];
+                    }
+                }
+
                 matrixCtx.fillText(text, i * fontSize, drops[i] * fontSize);
                 if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) {
                     drops[i] = 0;
+                    columnState[i] = null; // Reset word state when column resets
                 }
                 drops[i]++;
             }
