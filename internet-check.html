@@ -7,8 +7,8 @@
     <style>
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
-            color: white;
+            font-family: monospace;
+            color: #0f0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -18,21 +18,21 @@
             background: #000;
         }
         #clock {
-            font-size: 48px;
+            font-size: 72px;
             position: absolute;
             top: 20px;
             z-index: 10;
-            text-shadow: 0 0 10px #0f0;
+            text-shadow: 0 0 15px #0f0, 0 0 30px #0f0;
         }
         #status {
             font-size: 100px;
-            margin-top: 80px;
+            margin-top: 120px;
             z-index: 10;
             display: none;
         }
         #status.online {
             display: block;
-            color: green;
+            color: #0f0;
             animation: pulse 2s infinite;
         }
         #status.offline {
@@ -44,20 +44,6 @@
             0% { transform: scale(1); text-shadow: 0 0 10px currentColor; }
             50% { transform: scale(1.2); text-shadow: 0 0 20px currentColor; }
             100% { transform: scale(1); text-shadow: 0 0 10px currentColor; }
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 18px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            z-index: 10;
-            margin-top: 20px;
-        }
-        button:hover {
-            background-color: #0056b3;
         }
         #matrixCanvas {
             position: fixed;
@@ -78,28 +64,13 @@
             z-index: 1;
             display: none;
         }
-        #videoPlayer {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 20;
-            max-width: 90%;
-            max-height: 90%;
-        }
     </style>
 </head>
 <body>
     <div id="clock"></div>
     <div id="status">✓</div>
-    <button onclick="playVideo()">Play Video</button>
     <canvas id="matrixCanvas"></canvas>
     <div id="static"></div>
-    <video id="videoPlayer" controls>
-        <source src="https://example.com/your-video.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
     <video id="keepAwake" style="display: none;" loop muted>
         <source src="https://cdn.pixabay.com/video/2023/03/06/152774-805054614_tiny.mp4" type="video/mp4">
     </video>
@@ -108,7 +79,12 @@
         function updateClock() {
             const clock = document.getElementById('clock');
             const now = new Date();
-            clock.textContent = now.toLocaleTimeString();
+            clock.textContent = now.toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
         }
         setInterval(updateClock, 1000);
         updateClock();
@@ -164,13 +140,6 @@
         // Keep iPad Awake
         const keepAwakeVideo = document.getElementById('keepAwake');
         keepAwakeVideo.play().catch(() => console.log('Keep-awake video failed to play'));
-
-        // Video Playback (Placeholder)
-        const videoPlayer = document.getElementById('videoPlayer');
-        function playVideo() {
-            alert('No video selected yet. Add a video URL to the <source> tag.');
-            // Example: videoPlayer.style.display = 'block'; videoPlayer.play();
-        }
 
         // Resize Canvas on Window Resize
         window.addEventListener('resize', () => {
