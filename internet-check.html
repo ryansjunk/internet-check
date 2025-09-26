@@ -1,196 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Internet Status with Clock</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: black;
-      font-family: 'Orbitron', monospace;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
-      color: #00ff00;
-    }
-    canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
-    #overlay {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    #clock {
-      font-size: 12rem;
-      font-weight: bold;
-      margin-bottom: 2rem;
-      text-shadow: 0 0 30px #00ff00;
-    }
-    #status {
-      font-size: 3.5rem;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #countdown {
-      font-size: 2.5rem;
-      margin-top: 1rem;
-    }
-    video.symbol {
-      width: 80px;
-      height: 80px;
-      margin-left: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Man Cave Internet Check</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
+        }
+        #clock {
+            font-size: 48px;
+            position: absolute;
+            top: 20px;
+            z-index: 10;
+            text-shadow: 0 0 10px #0f0;
+        }
+        #status {
+            font-size: 24px;
+            margin-top: 80px;
+            z-index: 10;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            z-index: 10;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #matrixCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: none;
+        }
+        #static {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://i.giphy.com/media/3o6Zta4k5fQ7gH5p4k/giphy.gif') no-repeat center/cover;
+            z-index: 1;
+            display: none;
+        }
+        #videoPlayer {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            max-width: 90%;
+            max-height: 90%;
+        }
+    </style>
 </head>
 <body>
-  <canvas id="background"></canvas>
-
-  <div id="overlay">
-    <div id="clock">00:00</div>
-    <div id="status">
-      Checking…
-      <video id="checkmark" class="symbol" muted loop playsinline></video>
-      <video id="cross" class="symbol" muted loop playsinline></video>
-    </div>
-    <div id="countdown">Next check in: 10s</div>
-  </div>
-
-  <script>
-    // Canvas setup
-    const canvas = document.getElementById("background");
-    const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const letters = "アァカサタナハマヤラ0123456789".split("");
-    const fontSize = 14;
-    const columns = Math.floor(canvas.width / fontSize);
-    const drops = Array(columns).fill(1);
-
-    function drawMatrix() {
-      ctx.fillStyle = "rgba(0,0,0,0.05)";
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.fillStyle = "#0F0";
-      ctx.font = fontSize + "px monospace";
-      for(let i=0;i<drops.length;i++){
-        const text = letters[Math.floor(Math.random()*letters.length)];
-        ctx.fillText(text,i*fontSize,drops[i]*fontSize);
-        if(drops[i]*fontSize > canvas.height && Math.random()>0.975){
-          drops[i] = 0;
+    <div id="clock"></div>
+    <div id="status"></div>
+    <button onclick="playVideo()">Play Video</button>
+    <canvas id="matrixCanvas"></canvas>
+    <div id="static"></div>
+    <video id="videoPlayer" controls>
+        <source src="https://example.com/your-video.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <video id="keepAwake" style="display: none;" loop muted>
+        <source src="https://cdn.pixabay.com/video/2023/03/06/152774-805054614_tiny.mp4" type="video/mp4">
+    </video>
+    <script>
+        // Clock
+        function updateClock() {
+            const clock = document.getElementById('clock');
+            const now = new Date();
+            clock.textContent = now.toLocaleTimeString();
         }
-        drops[i]++;
-      }
-    }
+        setInterval(updateClock, 1000);
+        updateClock();
 
-    function drawStatic() {
-      const imageData = ctx.createImageData(canvas.width,canvas.height);
-      const buffer = imageData.data;
-      for(let i=0;i<buffer.length;i+=4){
-        const shade = Math.random()*255;
-        buffer[i]=buffer[i+1]=buffer[i+2]=shade;
-        buffer[i+3]=255;
-      }
-      ctx.putImageData(imageData,0,0);
-    }
+        // Internet Status and Background
+        const status = document.getElementById('status');
+        const matrixCanvas = document.getElementById('matrixCanvas');
+        const staticDiv = document.getElementById('static');
 
-    // Elements
-    const statusEl = document.getElementById("status");
-    const countdownEl = document.getElementById("countdown");
-    const clockEl = document.getElementById("clock");
-    const checkmarkVideo = document.getElementById("checkmark");
-    const crossVideo = document.getElementById("cross");
+        function updateStatus() {
+            if (navigator.onLine) {
+                status.textContent = 'Online';
+                status.style.color = 'green';
+                matrixCanvas.style.display = 'block';
+                staticDiv.style.display = 'none';
+            } else {
+                status.textContent = 'Offline';
+                status.style.color = 'red';
+                matrixCanvas.style.display = 'none';
+                staticDiv.style.display = 'block';
+            }
+        }
+        window.addEventListener('online', updateStatus);
+        window.addEventListener('offline', updateStatus);
+        updateStatus();
 
-    // Placeholder tiny looping videos (replace later with real animations)
-    checkmarkVideo.src = "data:video/mp4;base64,AAAAHGZ0eXBNNA==";
-    crossVideo.src = "data:video/mp4;base64,AAAAHGZ0eXBNNA==";
+        // Matrix Effect
+        const ctx = matrixCanvas.getContext('2d');
+        matrixCanvas.height = window.innerHeight;
+        matrixCanvas.width = window.innerWidth;
+        const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const fontSize = 14;
+        const columns = matrixCanvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(0);
 
-    const url = "https://www.gstatic.com/generate_204";
-    const intervalSeconds = 10;
-    let countdown = intervalSeconds;
-    let online = true;
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+            ctx.fillStyle = '#0F0';
+            ctx.font = `${fontSize}px monospace`;
 
-    function updateStatus(isOnline){
-      online = isOnline;
-      if(online){
-        statusEl.childNodes[0].textContent = "ONLINE";
-        statusEl.style.color = "#00ff00";
-        checkmarkVideo.style.display="inline";
-        crossVideo.style.display="none";
-        checkmarkVideo.play();
-      } else {
-        statusEl.childNodes[0].textContent = "OFFLINE";
-        statusEl.style.color="#ff4444";
-        crossVideo.style.display="inline";
-        checkmarkVideo.style.display="none";
-        crossVideo.play();
-      }
-    }
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 33);
 
-    async function checkInternet(){
-      try{
-        await fetch(url,{mode:"no-cors",cache:"no-store"});
-        updateStatus(true);
-      } catch(e){
-        updateStatus(false);
-      }
-    }
+        // Keep iPad Awake
+        const keepAwakeVideo = document.getElementById('keepAwake');
+        keepAwakeVideo.play().catch(() => console.log('Keep-awake video failed to play'));
 
-    // Countdown & periodic check
-    setInterval(()=>{
-      countdown--;
-      if(countdown<0){
-        countdown=intervalSeconds;
-        checkInternet();
-      }
-      countdownEl.textContent = `Next check in: ${countdown}s`;
-    },1000);
+        // Video Playback
+        const videoPlayer = document.getElementById('videoPlayer');
+        function playVideo() {
+            videoPlayer.style.display = 'block';
+            videoPlayer.play().catch(() => alert('Error playing video. Check the video source.'));
+        }
 
-    // Clock
-    function updateClock(){
-      const now = new Date();
-      clockEl.textContent = now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",hour12:false});
-    }
-    setInterval(updateClock,60000);
-    updateClock();
-
-    // Animation loop
-    function animate(){
-      if(online) drawMatrix();
-      else drawStatic();
-      requestAnimationFrame(animate);
-    }
-    animate();
-
-    // Initial check
-    checkInternet();
-
-    window.addEventListener("resize",()=>{
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    });
-
-    // Tap to start videos / keep awake
-    document.body.addEventListener("click",()=>{
-      checkmarkVideo.play();
-      crossVideo.play();
-      alert("✅ Keep-awake mode activated!");
-    },{once:true});
-  </script>
+        // Resize Canvas on Window Resize
+        window.addEventListener('resize', () => {
+            matrixCanvas.height = window.innerHeight;
+            matrixCanvas.width = window.innerWidth;
+        });
+    </script>
 </body>
 </html>
