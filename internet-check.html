@@ -1,194 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Internet Status with Clock</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
-<style>
-  body {
-    margin: 0;
-    overflow: hidden;
-    background: black;
-    color: #00ff00;
-    font-family: 'Orbitron', monospace;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    text-align: center;
-  }
-  #clock {
-    font-size: 14rem; /* big clock */
-    font-weight: bold;
-    margin-bottom: 2rem;
-    z-index: 1;
-    position: relative;
-    text-shadow: 0 0 30px #00ff00;
-  }
-  #status {
-    font-size: 4rem; /* large online/offline */
-    font-weight: bold;
-    z-index: 1;
-    position: relative;
-  }
-  #countdown {
-    font-size: 2rem; /* smaller next check */
-    margin-top: 1rem;
-    z-index: 1;
-    position: relative;
-  }
-  canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>Internet Status Monitor</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #0f0;
+      background: black;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+      overflow: hidden;
+    }
+    #matrix, #static {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+    #status {
+      font-size: 4em;
+      font-weight: bold;
+    }
+    #time {
+      font-size: 6em;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    #nextCheck {
+      font-size: 1.5em;
+      margin-top: 20px;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
 </head>
 <body>
-<canvas id="background"></canvas>
-<div id="clock">00:00</div>
-<div id="status">Checking…</div>
-<div id="countdown">Next check in: 10s</div>
+  <canvas id="matrix"></canvas>
+  <canvas id="static"></canvas>
+  <div id="status">Checking...</div>
+  <div id="time"></div>
+  <div id="nextCheck"></div>
 
-<!-- Hidden debug video (Safari needs this to keep screen awake) -->
-<video id="debugVideo" autoplay muted playsinline loop style="display:none">
-  <source src="data:video/mp4;base64,AAAAHGZ0eXBpc28yAAACAGlzbzJpc28yYXZjMW1wNDEAAAAIZnJlZQAACG1kYXQhEA==" type="video/mp4">
-</video>
+  <!-- Hidden tiny video for keep-awake trick -->
+  <video id="keepAwakeVideo" playsinline muted loop style="display:none; width:1px; height:1px;">
+    <source src="data:video/mp4;base64,AAAAHGZ0eXBNNA==" type="video/mp4">
+  </video>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"></script>
-<script>
-  const canvas = document.getElementById("background");
-  const ctx = canvas.getContext("2d");
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  <script>
+    const statusDiv = document.getElementById('status');
+    const timeDiv = document.getElementById('time');
+    const nextCheckDiv = document.getElementById('nextCheck');
+    const matrix = document.getElementById("matrix");
+    const ctx = matrix.getContext("2d");
+    const staticCanvas = document.getElementById("static");
+    const staticCtx = staticCanvas.getContext("2d");
+    const video = document.getElementById("keepAwakeVideo");
 
-  // MATRIX setup
-  const letters = "アァカサタナハマヤラ0123456789".split("");
-  const fontSize = 14;
-  const columns = Math.floor(canvas.width / fontSize);
-  const drops = Array(columns).fill(1);
+    matrix.height = window.innerHeight;
+    matrix.width = window.innerWidth;
+    staticCanvas.width = window.innerWidth;
+    staticCanvas.height = window.innerHeight;
 
-  function drawMatrix() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#0F0";
-    ctx.font = fontSize + "px monospace";
+    const letters = "アァイィウヴエェオカガキギクグケゲコゴサザシジスズセゼソゾタダチッヂツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモヤユヨラリルレロワヲン";
+    const fontSize = 14;
+    const columns = matrix.width / fontSize;
+    const drops = Array.from({length: columns}).map(() => 1);
 
-    for (let i = 0; i < drops.length; i++) {
-      const text = letters[Math.floor(Math.random() * letters.length)];
-      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-        drops[i] = 0;
+    function drawMatrix() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, matrix.width, matrix.height);
+      ctx.fillStyle = "#0f0";
+      ctx.font = fontSize + "px monospace";
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters[Math.floor(Math.random() * letters.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > matrix.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
       }
-      drops[i]++;
     }
-  }
 
-  // STATIC setup
-  function drawStatic() {
-    const imageData = ctx.createImageData(canvas.width, canvas.height);
-    const buffer = imageData.data;
-    for (let i = 0; i < buffer.length; i += 4) {
-      const shade = Math.random() * 255;
-      buffer[i] = buffer[i + 1] = buffer[i + 2] = shade;
-      buffer[i + 3] = 255;
+    function drawStatic() {
+      const imageData = staticCtx.createImageData(staticCanvas.width, staticCanvas.height);
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        const shade = Math.random() * 255;
+        imageData.data[i] = shade;
+        imageData.data[i + 1] = shade;
+        imageData.data[i + 2] = shade;
+        imageData.data[i + 3] = 255;
+      }
+      staticCtx.putImageData(imageData, 0, 0);
     }
-    ctx.putImageData(imageData, 0, 0);
-  }
 
-  // INTERNET CHECKER
-  const statusEl = document.getElementById("status");
-  const countdownEl = document.getElementById("countdown");
-  const url = "https://www.gstatic.com/generate_204"; 
-  const intervalSeconds = 10;
-  let countdown = intervalSeconds;
-  let online = true;
-  let lastStatusText = "Checking…";
-
-  function updateStatus(isOnline) {
-    online = isOnline;
-    if (online) {
-      statusEl.textContent = "ONLINE ✅";
-      statusEl.style.color = "#00ff00";
-    } else {
-      statusEl.textContent = "OFFLINE ❌";
-      statusEl.style.color = "#ff4444";
+    function showMatrix() {
+      matrix.style.display = "block";
+      staticCanvas.style.display = "none";
     }
-    lastStatusText = statusEl.textContent;
-  }
-
-  function checkInternet() {
-    fetch(url, { mode: "no-cors", cache: "no-store" })
-      .then(() => updateStatus(true))
-      .catch(() => updateStatus(false));
-  }
-
-  // COUNTDOWN
-  setInterval(() => {
-    countdown--;
-    if (countdown <= 0) {
-      countdown = intervalSeconds;
-      checkInternet();
+    function showStatic() {
+      staticCanvas.style.display = "block";
+      matrix.style.display = "none";
     }
-    countdownEl.textContent = `Next check in: ${countdown}s`;
-  }, 1000);
 
-  // CLOCK
-  const clockEl = document.getElementById("clock");
-  function updateClock() {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString("en-US", { 
-      hour12: false, 
-      hour: "2-digit", 
-      minute: "2-digit" 
+    function updateClock() {
+      const now = new Date();
+      timeDiv.textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+
+    let countdown = 10;
+    function updateCountdown() {
+      nextCheckDiv.textContent = `Next check in ${countdown}s`;
+      countdown--;
+      if (countdown < 0) {
+        countdown = 10;
+        checkConnection();
+      }
+    }
+
+    async function checkConnection() {
+      statusDiv.textContent = "Checking...";
+      try {
+        const response = await fetch("https://www.google.com/favicon.ico?_=" + Date.now(), {mode: "no-cors"});
+        if (response) {
+          statusDiv.textContent = "ONLINE";
+          statusDiv.style.color = "#0f0";
+          showMatrix();
+        }
+      } catch (e) {
+        statusDiv.textContent = "OFFLINE";
+        statusDiv.style.color = "#f00";
+        showStatic();
+      }
+    }
+
+    // Update clock
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Countdown timer
+    setInterval(updateCountdown, 1000);
+
+    // Matrix & static animation
+    setInterval(drawMatrix, 50);
+    setInterval(drawStatic, 100);
+
+    // First connection check
+    checkConnection();
+
+    // Wake-lock trick
+    let wakeEnabled = false;
+    document.body.addEventListener("click", () => {
+      if (!wakeEnabled) {
+        video.play().then(() => {
+          wakeEnabled = true;
+          alert("✅ Keep-awake mode enabled. Screen should now stay on while this page is open.");
+        }).catch(err => {
+          alert("⚠️ Could not start keep-awake video: " + err);
+        });
+      }
     });
-    clockEl.textContent = timeStr;
-  }
-  setInterval(updateClock, 60000);
-  updateClock();
-
-  // BACKGROUND ANIMATION LOOP
-  function animate() {
-    if (online) {
-      drawMatrix();
-    } else {
-      drawStatic();
-    }
-    requestAnimationFrame(animate);
-  }
-  animate();
-
-  // Initial check
-  checkInternet();
-
-  // Resize handling
-  window.addEventListener("resize", () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  });
-
-  // ---- NO SLEEP FEATURE ----
-  const noSleep = new NoSleep();
-
-  document.addEventListener("click", () => {
-    noSleep.enable(); // force awake on every tap
-
-    // Flash confirmation
-    statusEl.textContent = "AWAKE MODE ON";
-    statusEl.style.color = "#00ff00";
-    setTimeout(() => {
-      statusEl.textContent = lastStatusText;
-      statusEl.style.color = online ? "#00ff00" : "#ff4444";
-    }, 2000);
-
-    console.log("NoSleep attempted.");
-  });
-</script>
+  </script>
 </body>
 </html>
